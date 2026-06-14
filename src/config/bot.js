@@ -1,5 +1,15 @@
 import { logger } from '../utils/logger.js';
 
+const DEFAULT_OWNER_IDS = ["1094625377541955635"];
+
+function parseOwnerIds(value) {
+  const ownerIds = value
+    ?.split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  return ownerIds?.length ? ownerIds : DEFAULT_OWNER_IDS;
+}
 
 export const botConfig = {
   // =========================
@@ -38,7 +48,7 @@ export const botConfig = {
   commands: {
     // Bot owner user IDs (comma-separated in OWNER_IDS env var).
     // Owners can access owner/admin-level bot commands.
-    owners: process.env.OWNER_IDS?.split(",") || [],
+    owners: parseOwnerIds(process.env.OWNER_IDS),
 
     // Default wait time between command uses (in seconds).
     defaultCooldown: 3, 
@@ -543,7 +553,6 @@ export function getRandomColor() {
 }
 
 export default botConfig;
-
 
 
 

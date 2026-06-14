@@ -20,6 +20,18 @@ function withTraceContext(context = {}, traceContext = {}) {
   };
 }
 
+function getCommandOwnerIds(client) {
+  return new Set(
+    (client.config?.bot?.commands?.owners || [])
+      .map((ownerId) => String(ownerId).trim())
+      .filter(Boolean)
+  );
+}
+
+function canUseBotCommand(interaction, client) {
+  return getCommandOwnerIds(client).has(interaction.user?.id);
+}
+
 export default {
   name: Events.InteractionCreate,
   async execute(interaction, client) {
@@ -45,6 +57,19 @@ export default {
               type: 'command_input_validation',
               commandName: interaction.commandName
             }, interactionTraceContext));
+
+            if (!canUseBotCommand(interaction, client)) {
+              throw createError(
+                `Unauthorized command access for ${interaction.commandName} by ${interaction.user?.id}`,
+                ErrorTypes.PERMISSION,
+                'Only the bot owner can use commands.',
+                withTraceContext({
+                  commandName: interaction.commandName,
+                  userId: interaction.user?.id,
+                  allowedOwnerIds: Array.from(getCommandOwnerIds(client))
+                }, interactionTraceContext)
+              );
+            }
 
             const command = client.commands.get(interaction.commandName);
 
@@ -96,6 +121,11 @@ export default {
             }, interactionTraceContext));
           }
         } else if (interaction.isAutocomplete()) {
+          if (!canUseBotCommand(interaction, client)) {
+            await interaction.respond([]);
+            return;
+          }
+
           // Handle autocomplete interactions
           const focusedOption = interaction.options.getFocused(true);
           
