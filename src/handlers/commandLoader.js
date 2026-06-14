@@ -6,6 +6,7 @@ import { logger } from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DISABLED_COMMAND_NAMES = new Set(['help']);
 
 
 
@@ -93,6 +94,11 @@ export async function loadCommands(client) {
             command.filePath = normalizedPath;
             
             const primaryCommandName = command.data.name;
+
+            if (DISABLED_COMMAND_NAMES.has(primaryCommandName)) {
+                logger.info(`Skipping disabled command: ${primaryCommandName}`);
+                continue;
+            }
             
             if (!uniqueCommandNames.has(primaryCommandName)) {
                 uniqueCommandNames.add(primaryCommandName);
@@ -150,6 +156,11 @@ const registeredNames = new Set();
                 const commandName = command.data.name;
                 
                 logger.debug(`Processing command for registration: ${commandName}`);
+
+                if (DISABLED_COMMAND_NAMES.has(commandName)) {
+                    logger.info(`Skipping disabled command registration: ${commandName}`);
+                    continue;
+                }
                 
                 if (!registeredNames.has(commandName)) {
                     registeredNames.add(commandName);
@@ -325,5 +336,4 @@ export async function reloadCommand(client, commandName) {
         return { success: false, message: `Error reloading command: ${error.message}` };
     }
 }
-
 

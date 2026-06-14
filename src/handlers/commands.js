@@ -5,6 +5,7 @@ import { logger } from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const DISABLED_COMMAND_NAMES = new Set(['help']);
 
 async function getFiles(dir) {
   const dirents = await readdir(dir, { withFileTypes: true });
@@ -33,6 +34,11 @@ export default async (client) => {
           logger.warn(`Command at ${file} is missing required "data" or "execute" property.`);
           continue;
         }
+
+        if (DISABLED_COMMAND_NAMES.has(command.data.name)) {
+          logger.info(`Skipping disabled command: ${command.data.name}`);
+          continue;
+        }
         
         client.commands.set(command.data.name, command);
         loadedCount++;
@@ -47,4 +53,3 @@ export default async (client) => {
     logger.error('Error loading commands:', error);
   }
 };
-
