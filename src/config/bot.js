@@ -553,6 +553,3 @@ export function getRandomColor() {
 }
 
 export default botConfig;
-
-
-
